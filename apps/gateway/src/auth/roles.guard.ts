@@ -1,3 +1,4 @@
+import { Role } from '@app/common/roles.enum';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 

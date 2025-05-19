@@ -93,6 +93,27 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
 
+## Git Branch Strategy
+
+To ensure smooth collaboration and maintain code quality, this project follows a Git Flow branching strategy:
+
+- **main**: The production-ready branch. Only thoroughly tested, stable code is merged here.
+- **develop**: The integration branch for features and fixes. All completed features and bugfixes are merged here before going to main.
+- **feature/***: For new features. Branch off from `develop` and merge back into `develop` when complete.
+  - Example: `feature/event-creation`, `feature/auth-jwt`
+- **release/***: For preparing a new production release. Branch off from `develop`, finalize, then merge into both `main` and `develop`.
+  - Example: `release/v1.0.0`
+- **hotfix/***: For urgent fixes to production. Branch off from `main`, then merge back into both `main` and `develop`.
+  - Example: `hotfix/fix-login-bug`
+
+**Basic Workflow:**
+1. Create a feature branch from `develop` for each new feature or improvement.
+2. Open a pull request (PR) to merge your feature branch into `develop` after review.
+3. When ready for release, create a `release/*` branch from `develop`, finalize, then merge into `main` and `develop`.
+4. For critical production bugs, use a `hotfix/*` branch from `main`.
+
+This strategy helps keep the codebase organized, supports parallel development, and ensures production stability.
+
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
