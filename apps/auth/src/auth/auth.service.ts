@@ -1,38 +1,85 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-
-interface User {
-  id: string;
-  username: string;
-  password: string; // hashed
-  role: string;
-}
+import { UsersService } from '../users/users.service';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
-  private users: User[] = []; // 실제 구현에서는 DB 사용
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  constructor(private readonly jwtService: JwtService) { }
-
-  async signup(username: string, password: string, role = 'USER') {
-    const hash = await bcrypt.hash(password, 10);
-    const user = { id: Date.now().toString(), username, password: hash, role };
-    this.users.push(user);
-    return { id: user.id, username: user.username, role: user.role };
-  }
-
-  async validateUser(username: string, password: string) {
-    const user = this.users.find((u) => u.username === username);
+  async validateUser(username: string, password: string): Promise<User | null> {
+    const user = await this.usersService.findByUsername(username);
     if (!user) return null;
-    const match = await bcrypt.compare(password, user.password);
-    return match ? user : null;
+    
+    const isPasswordValid = await this.usersService.validatePassword(user, password);
+    return isPasswordValid ? user : null;
   }
 
   async login(user: User) {
-    const payload = { sub: user.id, role: user.role };
+    const payload = { sub: user._id, username: user.username, role: user.role };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      const user = await this.usersService.findById(payload.sub);
+      
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const newPayload = { sub: user._id, username: user.username, role: user.role };
+      const newAccessToken = this.jwtService.sign(newPayload, { expiresIn: '1h' });
+      const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+
+      return {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
+  }
+
+  async register(username: string, password: string, email: string) {
+    const existingUser = await this.usersService.findByUsername(username);
+    if (existingUser) {
+      throw new ConflictException('Username already exists');
+    }
+    // Check for duplicate email
+    const existingEmail = await this.usersService.findByEmail(email);
+    if (existingEmail) {
+      throw new ConflictException('Email already exists');
+    }
+    const user = await this.usersService.create(username, password, email);
+    return {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
     };
   }
 }

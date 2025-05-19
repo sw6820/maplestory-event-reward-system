@@ -1,19 +1,36 @@
-import { Body, Controller, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, UnauthorizedException, HttpCode, Get, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-  @Post('signup')
-  async signup(@Body() body: { username: string; password: string; role?: string }) {
-    return this.authService.signup(body.username, body.password, body.role);
+  @Post('register')
+  @HttpCode(201)
+  async register(
+    @Body() body: { username: string; password: string; email: string },
+  ) {
+    return this.authService.register(body.username, body.password, body.email);
   }
 
   @Post('login')
+  @HttpCode(200)
   async login(@Body() body: { username: string; password: string }) {
     const user = await this.authService.validateUser(body.username, body.password);
     if (!user) throw new UnauthorizedException('Invalid credentials');
     return this.authService.login(user);
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(@Body() body: { refresh_token: string }) {
+    return this.authService.refreshToken(body.refresh_token);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Request() req) {
+    return this.authService.getProfile(req.user.userId);
   }
 }

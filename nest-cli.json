@@ -1,14 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/maplestory-backend/src",
+  "sourceRoot": "apps/auth/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true,
-    "tsConfigPath": "apps/maplestory-backend/tsconfig.app.json"
+    "webpack": true
   },
   "monorepo": true,
-  "root": "apps/maplestory-backend",
+  "root": "apps/auth",
   "projects": {
     "auth": {
       "type": "application",
@@ -44,15 +43,6 @@
       "sourceRoot": "apps/gateway/src",
       "compilerOptions": {
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
-      }
-    },
-    "maplestory-backend": {
-      "type": "application",
-      "root": "apps/maplestory-backend",
-      "entryFile": "main",
-      "sourceRoot": "apps/maplestory-backend/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/maplestory-backend/tsconfig.app.json"
       }
     }
   }
