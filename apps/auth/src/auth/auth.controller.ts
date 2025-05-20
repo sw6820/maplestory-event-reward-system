@@ -1,6 +1,17 @@
 import { Body, Controller, Post, UnauthorizedException, HttpCode, Get, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Request as ExpressRequest } from 'express';
+
+interface JwtPayload {
+  sub: string;
+  username: string;
+  role: string;
+}
+
+interface RequestWithUser extends ExpressRequest {
+  user: JwtPayload;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +41,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req) {
-    return this.authService.getProfile(req.user.userId);
+  async getProfile(@Request() req: RequestWithUser) {
+    return this.authService.getProfile(req.user.sub);
   }
 }

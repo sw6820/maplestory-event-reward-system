@@ -1,13 +1,41 @@
 version: '3.8'
 
 services:
-  app:
+  auth:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: apps/auth/Dockerfile
+    ports:
+      - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongodb:27017/production
+      - MONGODB_URI=mongodb://mongodb:27017/auth
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      - mongodb
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - AUTH_SERVICE_URL=http://auth:3000
+      - EVENT_SERVICE_URL=http://event:3002
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      - auth
+      - event
+
+  event:
+    build:
+      context: .
+      dockerfile: apps/event/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/event
+      - JWT_SECRET=your-secret-key
     depends_on:
       - mongodb
 
@@ -15,5 +43,8 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=production 
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data: 

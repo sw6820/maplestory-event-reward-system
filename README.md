@@ -34,8 +34,6 @@ NestJS와 MongoDB 기반의 마이크로서비스 아키텍처로 구현된 이�
 - 주요 API  
   - `POST /events`: 이벤트 생성 (ADMIN 권한)
   - `GET /events`: 전체 이벤트 조회 (인증 필요)
-  - `POST /reward/request`: 유저 보상 요청 (조건 자동 검증)
-  - `GET /reward/history`: 본인 또는 전체 요청 이력 조회 (역할별 제한)
 - 설계 의도  
   이벤트/보상 도메인을 분리하여 유지보수성을 확보하고, MongoDB 기반으로 유연한 데이터 저장 및 조건 확장 가능성 확보
 
@@ -61,13 +59,21 @@ NestJS와 MongoDB 기반의 마이크로서비스 아키텍처로 구현된 이�
 ## 디렉토리 구조
 
 maplestory-event-reward-system/
+
 ├── apps/
+
 │ ├── auth/ # 인증 서비스
+
 │ ├── event/ # 이벤트 및 보상 처리
+
 │ └── gateway/ # API Gateway
+
 ├── libs/common/ # 공통 DTO, enum, interface
+
 ├── test/ # Jest + SuperTest 기반 테스트
+
 ├── docker/ # 실행 스크립트 및 설정
+
 └── docker-compose.yml
 
 ## 실행 방법
@@ -81,7 +87,7 @@ maplestory-event-reward-system/
 ### 환경 변수 설정
 
 각 서비스 루트에 `.env` 파일을 생성합니다. 예시는 아래와 같습니다:
-
+```
 apps/auth/.env
 
 JWT_SECRET=maple-secret
@@ -92,68 +98,74 @@ apps/event/.env
 
 MONGODB_URI=mongodb://mongo:27017/maplestory-events
 
-
+```
 ### 테스트 실행
 
 #### 유닛 테스트 (Jest 기반)
 
-npm run test
-
-
-#### 테스트 커버리지 확인
-
-npm run test:cov
-
+`npm run test`
 
 #### e2e 통합 테스트 (SuperTest 기반)
 
-npm run test:e2e
-
-#### Docker 기반 전체 통합 테스트 실행
-
-npm run test:docker
+`npm run test:e2e`
 
 
 ### Docker로 전체 서비스 실행
 
 #### docker-compose.yml 예시
-
+```
 version: '3.8'
+
 services:
+
 mongo:
+
 image: mongo:6
+
 container_name: maple-mongo
+
 ports:
 - 27017:27017
+
 volumes:
 - ./data/mongo:/data/db
 
 auth:
+
 build: ./apps/auth
+
 environment:
 - MONGODB_URI=mongodb://mongo:27017/maplestory-auth
 - JWT_SECRET=maple-secret
+
 depends_on:
 - mongo
 
 event:
+
 build: ./apps/event
+
 environment:
 - MONGODB_URI=mongodb://mongo:27017/maplestory-events
+
 depends_on:
 - mongo
 
 gateway:
+
 build: ./apps/gateway
+
 ports:
 - 3000:3000
+
 depends_on:
 - auth
 - event
 
+```
 #### 실행 명령어
 
-docker-compose up --build
+`docker-compose up --build`
 
 
 - gateway: http://localhost:3000
@@ -162,18 +174,21 @@ docker-compose up --build
 
 #### 종료 및 정리
 
-docker-compose down -v
+`docker-compose down -v`
 
 ### 개발 서버 수동 실행
 
-auth 서비스 개발 서버 실행
-npm run start:dev auth
+- auth 서비스 개발 서버 실행
 
-event 서비스 개발 서버 실행
-npm run start:dev event
+`npm run start:dev auth`
 
-gateway 서비스 개발 서버 실행
-npm run start:dev gateway
+- event 서비스 개발 서버 실행
+
+`npm run start:dev event`
+
+- gateway 서비스 개발 서버 실행
+
+`npm run start:dev gateway`
 
 
 ## 설계 의도 요약

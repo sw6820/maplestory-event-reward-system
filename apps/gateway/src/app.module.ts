@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Controller()
 export class AppController {
@@ -14,7 +15,10 @@ export class AppController {
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: 'apps/gateway/.env',
+        }),
         PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -24,6 +28,7 @@ export class AppController {
             }),
             inject: [ConfigService],
         }),
+        AuthModule,
     ],
     providers: [JwtStrategy],
     controllers: [AppController],
